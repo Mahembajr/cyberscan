@@ -159,4 +159,4 @@ This is **Phase 1** of my cybersecurity learning path. Coming up:
 
 ---
 
-*Built as part of a self-directed cybersecurity learning path aimed at a career in penetration testing / ethical hacking.*
+*Built as part of a self-directed cybersecurity learning path aimed at a career in penetration testing.*
